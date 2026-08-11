@@ -33,18 +33,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Configure Keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEY_PROPERTIES: |
-            storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
-            keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-            keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-            storeFile=upload-keystore.jks
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
-          echo "$KEY_PROPERTIES" > android/key.properties
-
       - name: Build App Bundle
         run: flutter build appbundle --release
 
