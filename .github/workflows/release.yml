@@ -1,6 +1,9 @@
 name: Build and Release App Bundle
 
 on:
+  push:
+    branches:
+      - main
   release:
     types: [published]
   workflow_dispatch:
@@ -46,8 +49,17 @@ jobs:
         run: flutter build appbundle --release
 
       - name: Upload to Release
-        if: github.event_name == 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ github.event.release.tag_name }} build/app/outputs/bundle/release/app-release.aab --clobber
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+          else
+            VERSION=$(grep '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//' | tr '+' '-')
+            TAG_NAME="v$VERSION"
+          fi
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" build/app/outputs/bundle/release/app-release.aab --clobber
+          else
+            gh release create "$TAG_NAME" build/app/outputs/bundle/release/app-release.aab --title "Release $TAG_NAME" --generate-notes
+          fi
